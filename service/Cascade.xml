@@ -1,0 +1,34 @@
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-2.1.xsd"/>
+  <!-- Service to delete TutorialSteps for a given Tutorial -->
+  <service verb="delete" noun="TutorialStepByTutorial" display-name="Delete Tutorial Steps by Tutorial"
+           allow-remote="false">
+    <description>Deletes all TutorialStep records for a given tutorialId</description>
+    <in-parameters>
+      <parameter name="tutorialId" type="String" required="true"/>
+    </in-parameters>
+    <actions>
+      <entity-delete entity-name="tutorial.TutorialStep">
+        <condition field-name="tutorialId" from="tutorialId"/>
+      </entity-delete>
+    </actions>
+  </service>
+  <!-- Cascading Delete Service: Deletes Tutorial and its related TutorialSteps -->
+  <service verb="delete" noun="TutorialCascade" display-name="Delete Tutorial with Steps"
+           allow-remote="true">
+    <description>Deletes a Tutorial and all its related TutorialSteps</description>
+    <in-parameters>
+      <parameter name="tutorialId" type="String" required="true"/>
+    </in-parameters>
+    <actions>
+      <!-- Step 1: Delete related steps -->
+      <service-call name="delete#TutorialStepByTutorial">
+        <parameter name="tutorialId" from="tutorialId"/>
+      </service-call>
+
+      <!-- Step 2: Delete the main Tutorial -->
+      <entity-delete entity-name="tutorial.Tutorial">
+        <condition field-name="tutorialId" from="tutorialId"/>
+      </entity-delete>
+    </actions>
+  </service>

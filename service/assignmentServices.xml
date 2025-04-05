@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+  <!-- Create Tutorial Service -->
+  <service verb="create" noun="Tutorial" displayName="Create a Tutorial" type="entity-auto" allow-remote="true">
+    <in-parameters>
+      <auto-parameters include="nonpk"/>
+    </in-parameters>
+    <out-parameters>
+      <auto-parameters include="pk" required="true"/>
+    </out-parameters>
+    <actions>
+      <entity-value entity-name="tutorial.Tutorial" value="context" use-cache="true" create="true"/>
+      <set field="tutorialId" from="context.tutorialId"/>
+    </actions>
+  </service>
+
+  <!-- Update Tutorial Service -->
+  <service verb="update" noun="Tutorial" displayName="Update a Tutorial" type="entity-auto" allow-remote="true">
+    <in-parameters>
+      <auto-parameters include="pk" required="true"/>
+      <auto-parameters include="nonpk"/>
+    </in-parameters>
+    <actions>
+      <entity-value entity-name="tutorial.Tutorial" value="context" use-cache="false" create="false"/>
+    </actions>
+  </service>
+
+  <!-- Delete Tutorial Service -->
+
+  <!-- Sub-service: Deletes all TutorialStep records for a Tutorial -->
+  <service verb="delete" noun="TutorialStepsByTutorialId"
+           display-name="Delete Tutorial Steps By TutorialId"
+           allow-remote="false" type="inline">
+    <description>Deletes all steps associated with a tutorial</description>
+    <in-parameters>
+      <parameter name="tutorialId" type="String" required="true"/>
+    </in-parameters>
+    <actions>
+      <entity-delete entity-name="tutorial.TutorialStep">
+        <condition field-name="tutorialId" from="tutorialId"/>
+      </entity-delete>
+    </actions>
+  </service>
+
+  <!-- Main service: Deletes Tutorial after deleting TutorialSteps -->
+  <service verb="delete" noun="TutorialCascade"
+           display-name="Delete Tutorial with Steps"
+           allow-remote="true" type="inline">
+    <description>Deletes a Tutorial and its associated TutorialStep records</description>
+    <in-parameters>
+      <parameter name="tutorialId" type="String" required="true"/>
+    </in-parameters>
+    <actions>
+      <!-- Call the sub-service to delete steps -->
+      <service-call name="delete#TutorialStepsByTutorialId">
+        <parameter name="tutorialId" from="tutorialId"/>
+      </service-call>
+
+      <!-- Then delete the tutorial itself -->
+      <entity-delete ="tutorial.Tutorial">
+        <condition field-name="tutorialId" from="tutorialId"/>
+      </entity-delete>
+    </actions>
+  </service>
+    </services>
